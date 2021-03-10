@@ -1,7 +1,9 @@
 # google-drive-selector
 Allow use The Google Picker API from Any Domain
 
-The communication  between domains is done using: `window.postMessage`
+The communication  between domains is done using: `window.postMessage`  
+
+Reference: https://www.gmass.co/blog/google-picker-api/
 
 
 ## Usage
