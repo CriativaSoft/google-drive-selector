@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Google Drive</title>
+  </head>
+  <body>
+
+      <span> ... </span>
+    
+      <style>
+
+          .picker {
+            height: 97% !important;
+            width: 97% !important;
+            top: 0 !important;
+          }
+
+      </style>
+
+
+      <script type="text/javascript">
+        
+        // Scope to use to access user's Drive items.
+        var scope = [ 'https://www.googleapis.com/auth/drive.file' ];
+
+        var pickerApiLoaded = false;
+        var oauthToken, developerKey, clientId, appId;
+
+
+        /**
+         * Notify parent - on load!
+         * parent will check a cached 'oauthToken' and call 'enablePicker'
+         */
+        function onGoogleDriveLoaded() {
+
+           window.opener.postMessage({
+                'func': 'onGoogleDriveLoaded',
+                'message': ''
+            }, "*");
+
+        }
+
+        /**
+         * Notify parent - on select !
+         */
+        function onGoogleDriveSelected(message){
+            window.opener.postMessage({
+                'func': 'onGoogleDriveSelected',
+                'message': message
+            }, "*");
+        }
+
+   
+        /**
+         * Called from parent 
+         */
+        function enablePicker(params) {
+
+            oauthToken = params['oauthToken'];
+            developerKey = params['developerKey'];
+            clientId = params['clientId'];
+            appId = params['appId'];
+
+            console.log('enablePicker using params:', params);
+            
+            if(!oauthToken){
+              gapi.load('auth', {'callback': onAuthApiLoad});
+            }
+
+            gapi.load('picker', {'callback': onPickerApiLoad});
+        }
+
+        function onAuthApiLoad() {
+          window.gapi.auth.authorize({
+            'client_id' : clientId,
+            'scope' : scope,
+            'immediate' : false
+          }, handleAuthResult);
+        }
+
+        function onPickerApiLoad() {
+          pickerApiLoaded = true;
+          createPicker();
+        }
+
+        function handleAuthResult(authResult) {
+          if (authResult && !authResult.error) {
+            oauthToken = authResult.access_token;
+            createPicker();
+          } else {
+            console.log(authResult);
+            alert('Falha na autenticação do google');
+            window.close();
+          }
+        }
+
+        // Create and render a Picker object for searching images.
+        function createPicker() {
+          if (pickerApiLoaded && oauthToken) {
+            var view = new google.picker.View(google.picker.ViewId.DOCS);
+            // view.setMimeTypes("image/png,image/jpeg,image/jpg");
+            var picker = new google.picker.PickerBuilder()
+            // .enableFeature(google.picker.Feature.NAV_HIDDEN)
+            //.enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+            .setAppId(appId).setOAuthToken(oauthToken).addView(view).addView(
+                new google.picker.DocsUploadView()).setDeveloperKey(
+                developerKey).setCallback(pickerCallback).build();
+            picker.setVisible(true);
+          }
+        }
+
+        // A simple callback implementation.
+        function pickerCallback(data) {
+          if (data.action == google.picker.Action.PICKED) {
+            var fileId = data.docs[0].id;
+            
+            
+            // local send function.
+            function send(){
+                      //$("#upload-link").val(data.docs[0].url);
+                      //$("#upload-nome").val(data.docs[0].name);
+                      //$("#upload-drivetype").val(data.docs[0].mimeType);
+                      //$("#frmEnviarAnexo").submit();
+
+                      var messageData = {
+                        file : data.docs[0],
+                        oauthToken : oauthToken
+                      }
+
+                      onGoogleDriveSelected(messageData);
+
+                      window.close();
+            };
+            
+            if(!data.docs[0].isShared){
+
+              if(confirm("Esse arquivo não está compartilhado, deseja continuar ?")){
+                send();
+              }
+
+            }else{
+              send();
+            }
+        
+          }
+        }
+
+        /**
+         * Recebe eventos de iframes ou popups remotos
+         */
+        function enableWindowCallbacks(origin){
+
+            function _onMessage(event) {
+                // // Check sender origin to be trusted
+                // if (! event.origin.includes(origin)){
+                //     console.error(event.origin + 'not permited !!');
+                //     return;
+                // } 
+
+                var data = event.data;
+
+                if (typeof(window[data.func]) == "function") {
+                    window[data.func].call(null, data.message);
+                }
+            }
+            
+            if (window.addEventListener) {
+                window.addEventListener("message", _onMessage, false);        
+            } else if (window.attachEvent) {
+                window.attachEvent("onmessage", _onMessage, false);
+            }
+
+        }
+
+        enableWindowCallbacks();
+
+      </script>
+
+      <script type="text/javascript" src="https://apis.google.com/js/api.js?onload=onGoogleDriveLoaded"></script>
+  </body>
+</html>
