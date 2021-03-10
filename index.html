@@ -6,7 +6,7 @@
   </head>
   <body>
 
-      <span> ... </span>
+      <span id="loading"> . </span>
     
       <style>
 
@@ -63,6 +63,8 @@
             appId = params['appId'];
 
             console.log('enablePicker using params:', params);
+
+            document.querySelector('#loading').innerHTML = "...";
             
             if(!oauthToken){
               gapi.load('auth', {'callback': onAuthApiLoad});
@@ -122,22 +124,17 @@
           if (data.action == google.picker.Action.PICKED) {
             var fileId = data.docs[0].id;
             
-            
             // local send function.
             function send(){
-                      //$("#upload-link").val(data.docs[0].url);
-                      //$("#upload-nome").val(data.docs[0].name);
-                      //$("#upload-drivetype").val(data.docs[0].mimeType);
-                      //$("#frmEnviarAnexo").submit();
 
-                      var messageData = {
-                        file : data.docs[0],
-                        oauthToken : oauthToken
-                      }
+              var messageData = {
+                file : data.docs[0],
+                oauthToken : oauthToken
+              }
 
-                      onGoogleDriveSelected(messageData);
+              onGoogleDriveSelected(messageData);
 
-                      window.close();
+              window.close();
             };
             
             if(!data.docs[0].isShared){
