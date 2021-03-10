@@ -90,8 +90,15 @@
             createPicker();
           } else {
             console.log(authResult);
-            alert('Falha na autenticação do google');
-            // window.close();
+            
+            if(authResult.error == "popup_blocked_by_browser"){
+              alert('Favor, habilite os popups nessa janela !');
+            }else{
+              alert('Falha na autenticação do google');
+              window.close();  
+            }
+
+            
           }
         }
 
